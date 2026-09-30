@@ -216,3 +216,65 @@ export function InvoicesTableSkeleton() {
     </div>
   );
 }
+
+export function CustomersTableSkeleton() {
+  return (
+    <div className="w-full">
+      <div className="mb-8 h-8 w-36 rounded-md bg-gray-100" />
+      <div className="mt-6 flow-root">
+        <div className="overflow-x-auto">
+          <div className="inline-block min-w-full align-middle">
+            <div className="overflow-hidden rounded-md bg-gray-50 p-2 md:pt-0">
+              <table className="hidden min-w-full rounded-md text-gray-900 md:table">
+                <thead className="rounded-md bg-gray-50 text-left text-sm font-normal">
+                  <tr>
+                    <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
+                      Name
+                    </th>
+                    <th scope="col" className="px-3 py-5 font-medium">
+                      Email
+                    </th>
+                    <th scope="col" className="px-3 py-5 font-medium">
+                      Total Invoices
+                    </th>
+                    <th scope="col" className="px-3 py-5 font-medium">
+                      Total Pending
+                    </th>
+                    <th scope="col" className="px-4 py-5 font-medium">
+                      Total Paid
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="bg-white">
+                      <td className="whitespace-nowrap py-5 pl-4 pr-3 text-sm sm:pl-6">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-gray-100" />
+                          <div className="h-5 w-40 rounded bg-gray-100" />
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-5 text-sm">
+                        <div className="h-5 w-52 rounded bg-gray-100" />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-5 text-sm">
+                        <div className="h-6 w-16 rounded bg-gray-100" />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-5 text-sm">
+                        <div className="h-6 w-24 rounded bg-gray-100" />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-5 text-sm">
+                        <div className="h-6 w-24 rounded bg-gray-100" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
