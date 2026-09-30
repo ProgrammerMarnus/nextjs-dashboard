@@ -4,8 +4,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import postgres from 'postgres';
-import { signIn } from '@/auth';
-import { AuthError } from 'next-auth';
+import { createClient } from '@/utils/supabase/server';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -123,21 +122,40 @@ export async function deleteInvoice(id: string) {
   revalidatePath('/dashboard/invoices');
 }
 
-export async function authenticate(
-  prevState: string | undefined,
+export type AuthState = {
+  error: string | null;
+};
+
+export async function signIn(
+  prevState: AuthState,
   formData: FormData,
-) {
-  try {
-    await signIn('credentials', formData);
-  } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return 'Invalid credentials.';
-        default:
-          return 'Something went wrong.';
-      }
-    }
-    throw error;
+): Promise<AuthState> {
+  const supabase = await createClient();
+
+  const parsed = z
+    .object({ email: z.string().email(), password: z.string().min(6) })
+    .safeParse({
+      email: formData.get('email'),
+      password: formData.get('password'),
+    });
+
+  if (!parsed.success) {
+    return { error: 'Please provide a valid email and password.' };
   }
+
+  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+
+  if (error) {
+    // Never leak which part of the credentials was wrong.
+    return { error: 'Invalid credentials.' };
+  }
+
+  const callbackUrl = formData.get('redirectTo') || '/dashboard';
+  redirect(callbackUrl.toString());
+}
+
+export async function signOut() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect('/');
 }

@@ -1,9 +1,18 @@
-import NextAuth from 'next-auth';
-import { authConfig } from './auth.config';
+import { type NextRequest } from 'next/server';
+import { updateSession } from '@/utils/supabase/proxy';
 
-export default NextAuth(authConfig).auth;
+export async function proxy(request: NextRequest) {
+  return await updateSession(request);
+}
 
 export const config = {
-  // https://nextjs.org/docs/app/api-reference/file-conventions/proxy#matcher
-  matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };
