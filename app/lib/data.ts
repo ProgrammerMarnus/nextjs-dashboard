@@ -8,6 +8,7 @@ import {
   Revenue,
 } from './definitions';
 import { formatCurrency } from './utils';
+import { createClient } from '@/utils/supabase/server';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -215,4 +216,42 @@ export async function fetchFilteredCustomers(query: string) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
   }
+}
+
+export type Patient = {
+  id: string;
+  user_id: string;
+  full_name: string;
+  phone: string | null;
+  date_of_birth: string | null;
+  created_at: string;
+};
+
+export async function fetchPatients(): Promise<Patient[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('patients')
+    .select('id, user_id, full_name, phone, date_of_birth, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Supabase error:', error);
+    throw new Error('Failed to fetch patients.');
+  }
+  return data as Patient[];
+}
+
+export async function fetchPatientById(id: string): Promise<Patient | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('patients')
+    .select('id, user_id, full_name, phone, date_of_birth, created_at')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Supabase error:', error);
+    throw new Error('Failed to fetch patient.');
+  }
+  return (data as Patient | null) ?? null;
 }
