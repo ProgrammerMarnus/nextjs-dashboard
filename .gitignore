@@ -1,4 +1,7 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Ignore kilo/agent/llm related content
+.kilo/
+AGENTS.md
+kilo.json
 
 # dependencies
 /node_modules
@@ -35,5 +38,25 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# nextjs-dashboard folder (separate artifact)
-/nextjs-dashboard/
+# test artifacts
+playwright-report/
+test-results/
+
+# nextjs-dashboard build artifacts
+/nextjs-dashboard/node_modules/
+/nextjs-dashboard/.next/
+/nextjs-dashboard/out/
+/nextjs-dashboard/build
+/nextjs-dashboard/.vercel
+/nextjs-dashboard/*.tsbuildinfo
+/nextjs-dashboard/next-env.d.ts
+/nextjs-dashboard/.env
+/nextjs-dashboard/.env*.local
+/nextjs-dashboard/coverage
+/nextjs-dashboard/.DS_Store
+/nextjs-dashboard/npm-debug.log*
+/nextjs-dashboard/yarn-debug.log*
+/nextjs-dashboard/yarn-error.log*
+/nextjs-dashboard/*.pem
+/nextjs-dashboard/.pnp
+/nextjs-dashboard/.pnp.js

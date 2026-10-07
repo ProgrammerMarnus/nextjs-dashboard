@@ -25,6 +25,7 @@
     "zod": "^3.25.17"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "22.10.7",
     "@types/react": "19.0.7",
