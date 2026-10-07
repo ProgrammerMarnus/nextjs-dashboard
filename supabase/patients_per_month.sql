@@ -1,5 +1,6 @@
 -- Chart one: new patients per month (last 6 months, one row per month)
 -- Run this in Supabase SQL Editor AFTER supabase/patients.sql
+-- Creates public.patients_per_month (fixes 42P01 "relation does not exist").
 
 create or replace view public.patients_per_month
 with (security_invoker = true) as
@@ -23,3 +24,6 @@ order by m.month_start;
 -- The view reads public.patients through the caller's RLS policies
 -- (security_invoker = true). The signed-in role needs SELECT on both.
 grant select on public.patients_per_month to authenticated;
+
+-- Proof (SQL Editor runs as postgres: sums ALL users — expected):
+-- select * from public.patients_per_month;
