@@ -255,3 +255,23 @@ export async function fetchPatientById(id: string): Promise<Patient | null> {
   }
   return (data as Patient | null) ?? null;
 }
+
+export type PatientsPerMonth = {
+  month_start: string;
+  label: string;
+  new_patients: number;
+};
+
+export async function fetchPatientsPerMonth(): Promise<PatientsPerMonth[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('patients_per_month')
+    .select('month_start, label, new_patients')
+    .order('month_start', { ascending: true });
+
+  if (error) {
+    console.error('Supabase error:', error);
+    throw new Error('Failed to fetch patients per month.');
+  }
+  return data as PatientsPerMonth[];
+}
