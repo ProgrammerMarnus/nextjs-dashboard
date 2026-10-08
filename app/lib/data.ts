@@ -275,3 +275,50 @@ export async function fetchPatientsPerMonth(): Promise<PatientsPerMonth[]> {
   }
   return data as PatientsPerMonth[];
 }
+
+export interface AppointmentRow {
+  id: string;
+  starts_at: string;
+  status: 'booked' | 'done' | 'no_show';
+  patients: { full_name: string } | null;
+}
+
+export async function fetchAppointments(): Promise<AppointmentRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('id, starts_at, status, patients ( full_name )')
+    .order('starts_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data as unknown as AppointmentRow[];
+}
+
+export async function fetchPatientOptions(): Promise<{ id: string; full_name: string }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('patients').select('id, full_name').order('full_name');
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function fetchAppointmentById(id: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('appointments')
+    .select('id, patient_id, starts_at, status')
+    .eq('id', id)
+    .single();
+  return data;
+}
+
+export interface StatusRow {
+  status: 'booked' | 'done' | 'no_show';
+  total: number;
+}
+
+export async function fetchAppointmentStatusThisMonth(): Promise<StatusRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('appointment_status_this_month').select('status, total');
+  if (error) throw new Error(error.message);
+  return data as StatusRow[];
+}
