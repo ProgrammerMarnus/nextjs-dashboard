@@ -1,5 +1,5 @@
 import Table from '@/app/ui/customers/table';
-import { fetchFilteredCustomers } from '@/app/lib/data';
+import { fetchFilteredCustomers } from '@/app/lib/supabase-data';
 import { Suspense } from 'react';
 import { CustomersTableSkeleton } from '@/app/ui/skeletons';
 import { Metadata } from 'next';

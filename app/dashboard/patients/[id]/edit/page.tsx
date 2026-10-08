@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { fetchPatientById } from '@/app/lib/data';
+import { fetchPatientById } from '@/app/lib/supabase-data';
 import EditForm from '@/app/ui/patients/edit-form';
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {

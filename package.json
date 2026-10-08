@@ -4,7 +4,11 @@
     "build": "next build",
     "dev": "next dev --turbopack",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -28,11 +32,15 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^16.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "22.10.7",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.3",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.7"
+    "eslint-config-next": "^16.3.7",
+    "jsdom": "^25.0.0",
+    "vitest": "^2.0.0"
   }
 }

@@ -2,7 +2,7 @@
 
 import { PieChart, Pie, Sector, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { PieSectorShapeProps, PieLabelRenderProps } from 'recharts';
-import type { StatusRow } from '@/app/lib/data';
+import type { StatusRow } from '@/app/lib/supabase-data';
 
 const DISPLAY: Record<string, string> = { booked: 'Booked', done: 'Done', no_show: 'No-show' };
 const COLOURS: Record<string, string> = { Booked: '#2563eb', Done: '#16a34a', 'No-show': '#dc2626' };

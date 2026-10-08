@@ -1,7 +1,7 @@
 'use client';
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import type { PatientsPerMonth } from '@/app/lib/data';
+import type { PatientsPerMonth } from '@/app/lib/supabase-data';
 
 export default function PatientsChart({ rows }: { rows: PatientsPerMonth[] }) {
   if (rows.length === 0) {

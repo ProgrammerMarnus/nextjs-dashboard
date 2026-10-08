@@ -1,4 +1,4 @@
-import { fetchPatients } from '@/app/lib/data';
+import { fetchPatients } from '@/app/lib/supabase-data';
 import { CreatePatient, UpdatePatient, DeletePatient } from '@/app/ui/patients/buttons';
 import { lusitana } from '@/app/ui/fonts';
 

@@ -1,4 +1,4 @@
-import { fetchPatientOptions } from '@/app/lib/data';
+import { fetchPatientOptions } from '@/app/lib/supabase-data';
 import CreateAppointmentForm from '@/app/ui/appointments/create-form';
 
 export default async function Page() {

@@ -17,7 +17,7 @@ Shape: donut, status counts this month
 View: appointment_status_this_month (status, total) — with (security_invoker = true)
 
 ## Smoke test
-RLS: user B cannot see or edit user A's patients or appointments (checked 8 Oct)
+RLS: user B cannot see or edit user A's patients or appointments (checked 8 Oct, production)
 
 ## Freeze plan (8 Oct)
 

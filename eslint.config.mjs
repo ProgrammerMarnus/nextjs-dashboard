@@ -1,16 +1,17 @@
-import { defineConfig, globalIgnores } from 'eslint/config';
+import { defineConfig } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 
-const eslintConfig = defineConfig([
+export default defineConfig([
+  {
+    ignores: [
+      '**/.next/**',
+      '**/out/**',
+      '**/build/**',
+      'next-env.d.ts',
+      'app/lib/placeholder-data.ts',
+      'scripts/seed.js',
+      'node_modules/**',
+    ],
+  },
   ...nextVitals,
-  globalIgnores([
-    '.next/**',
-    'out/**',
-    'build/**',
-    'next-env.d.ts',
-    'app/lib/placeholder-data.ts',
-    'scripts/seed.js',
-  ]),
 ]);
-
-export default eslintConfig;

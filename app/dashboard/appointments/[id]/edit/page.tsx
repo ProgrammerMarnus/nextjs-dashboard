@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { fetchAppointmentById, fetchPatientOptions } from '@/app/lib/data';
+import { fetchAppointmentById, fetchPatientOptions } from '@/app/lib/supabase-data';
 import EditAppointmentForm from '@/app/ui/appointments/edit-form';
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

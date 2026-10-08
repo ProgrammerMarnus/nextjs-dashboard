@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import postgres from 'postgres';
 import { createClient } from '@/utils/supabase/server';
 import { fromDateTimeLocal } from '@/app/lib/time';
+import { AppError, handleError, type ActionResult } from './errors';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+const IdSchema = z.string().uuid({ message: 'Invalid ID format.' });
 
 const AppointmentSchema = z.object({
   patient_id: z.string().min(1),
@@ -31,12 +31,16 @@ export async function createAppointment(formData: FormData) {
     starts_at: fromDateTimeLocal(a.starts_at),
     status: a.status,
   });
-  if (error) throw new Error(`${error.code}: ${error.message}`);
+  if (error) throw handleError(error, 'Failed to create appointment.');
   revalidatePath('/dashboard/appointments');
   redirect('/dashboard/appointments');
 }
 
 export async function updateAppointment(id: string, formData: FormData) {
+  const validatedId = IdSchema.safeParse(id);
+  if (!validatedId.success) {
+    throw new AppError('Invalid appointment ID.', 'VALIDATION_ERROR', 400);
+  }
   const a = parseAppointment(formData);
   const supabase = await createClient();
   const { error } = await supabase
@@ -46,16 +50,21 @@ export async function updateAppointment(id: string, formData: FormData) {
       starts_at: fromDateTimeLocal(a.starts_at),
       status: a.status,
     })
-    .eq('id', id);
-  if (error) throw new Error(`${error.code}: ${error.message}`);
+    .eq('id', validatedId.data);
+  if (error) throw handleError(error, 'Failed to update appointment.');
   revalidatePath('/dashboard/appointments');
   redirect('/dashboard/appointments');
 }
 
 export async function deleteAppointment(id: string) {
+  const validated = IdSchema.safeParse(id);
+  if (!validated.success) {
+    console.error('Validation Error:', validated.error.flatten().fieldErrors);
+    throw new AppError('Invalid appointment ID.', 'VALIDATION_ERROR', 400);
+  }
   const supabase = await createClient();
-  const { error } = await supabase.from('appointments').delete().eq('id', id);
-  if (error) throw new Error(`${error.code}: ${error.message}`);
+  const { error } = await supabase.from('appointments').delete().eq('id', validated.data);
+  if (error) throw handleError(error, 'Failed to delete appointment.');
   revalidatePath('/dashboard/appointments');
 }
 
@@ -85,15 +94,16 @@ export type State = {
   message?: string | null;
 };
 
-export async function createInvoice(prevState: State, formData: FormData) {
-  // Validate form fields using Zod
+export async function createInvoice(
+  prevState: State,
+  formData: FormData,
+): Promise<State> {
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
 
-  // If form validation fails, return errors early. Otherwise, continue.
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -101,23 +111,24 @@ export async function createInvoice(prevState: State, formData: FormData) {
     };
   }
 
-  // Prepare data for insertion into the database
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
   const date = new Date().toISOString().split('T')[0];
 
-  // Insert data into the database
   try {
-    await sql`
-      INSERT INTO invoices (customer_id, amount, status, date)
-      VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-    `;
+    const supabase = await createClient();
+    const { error } = await supabase.from('invoices').insert({
+      customer_id: customerId,
+      amount: amountInCents,
+      status,
+      date,
+    });
+    if (error) throw handleError(error, 'Failed to create invoice.');
   } catch (error) {
-    // If a database error occurs, return a more specific error.
-    return { message: 'Database Error: Failed to Create Invoice.' };
+    const appError = handleError(error, 'Failed to create invoice.');
+    return { message: appError.message };
   }
 
-  // Revalidate the cache for the invoices page and redirect the user.
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
@@ -126,15 +137,13 @@ export async function updateInvoice(
   id: string,
   prevState: State,
   formData: FormData,
-) {
-  // Validate form fields using Zod
+): Promise<State> {
   const validatedFields = UpdateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
 
-  // If form validation fails, return errors early. Otherwise, continue.
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -142,33 +151,41 @@ export async function updateInvoice(
     };
   }
 
-  // Prepare data for update into the database
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
 
-  // Update data into the database
   try {
-    await sql`
-      UPDATE invoices
-      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-      WHERE id = ${id}
-    `;
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('invoices')
+      .update({
+        customer_id: customerId,
+        amount: amountInCents,
+        status,
+      })
+      .eq('id', id);
+    if (error) throw handleError(error, 'Failed to update invoice.');
   } catch (error) {
-    // If a database error occurs, return a more specific error.
-    return { message: 'Database Error: Failed to Update Invoice.' };
+    const appError = handleError(error, 'Failed to update invoice.');
+    return { message: appError.message };
   }
 
-  // Revalidate the cache for the invoices page and redirect the user.
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
 
 export async function deleteInvoice(id: string) {
+  const validated = IdSchema.safeParse(id);
+  if (!validated.success) {
+    console.error('Validation Error:', validated.error.flatten().fieldErrors);
+    throw new AppError('Invalid invoice ID.', 'VALIDATION_ERROR', 400);
+  }
   try {
-    await sql`DELETE FROM invoices WHERE id = ${id}`;
+    const supabase = await createClient();
+    const { error } = await supabase.from('invoices').delete().eq('id', validated.data);
+    if (error) throw handleError(error, 'Failed to delete invoice.');
   } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to delete invoice.');
+    throw handleError(error, 'Failed to delete invoice.');
   }
   revalidatePath('/dashboard/invoices');
 }
@@ -226,7 +243,10 @@ export type PatientState = {
   message?: string | null;
 };
 
-export async function createPatient(prevState: PatientState, formData: FormData) {
+export async function createPatient(
+  prevState: PatientState,
+  formData: FormData,
+): Promise<PatientState> {
   const validated = PatientSchema.safeParse({
     full_name: formData.get('full_name'),
     phone: formData.get('phone'),
@@ -248,7 +268,8 @@ export async function createPatient(prevState: PatientState, formData: FormData)
   });
   if (error) {
     console.error('Supabase error:', error);
-    return { message: `Database error ${error.code}: failed to create patient.` };
+    const appError = handleError(error, 'Failed to create patient.');
+    return { message: appError.message };
   }
 
   revalidatePath('/dashboard/patients');
@@ -259,7 +280,7 @@ export async function updatePatient(
   id: string,
   prevState: PatientState,
   formData: FormData,
-) {
+): Promise<PatientState> {
   const validated = PatientSchema.safeParse({
     full_name: formData.get('full_name'),
     phone: formData.get('phone'),
@@ -280,7 +301,8 @@ export async function updatePatient(
     .eq('id', id);
   if (error) {
     console.error('Supabase error:', error);
-    return { message: `Database error ${error.code}: failed to update patient.` };
+    const appError = handleError(error, 'Failed to update patient.');
+    return { message: appError.message };
   }
 
   revalidatePath('/dashboard/patients');
@@ -288,11 +310,16 @@ export async function updatePatient(
 }
 
 export async function deletePatient(id: string) {
+  const validated = IdSchema.safeParse(id);
+  if (!validated.success) {
+    console.error('Validation Error:', validated.error.flatten().fieldErrors);
+    throw new AppError('Invalid patient ID.', 'VALIDATION_ERROR', 400);
+  }
   const supabase = await createClient();
-  const { error } = await supabase.from('patients').delete().eq('id', id);
+  const { error } = await supabase.from('patients').delete().eq('id', validated.data);
   if (error) {
     console.error('Supabase error:', error);
-    throw new Error(`Database error ${error.code}: failed to delete patient.`);
+    throw handleError(error, 'Failed to delete patient.');
   }
   revalidatePath('/dashboard/patients');
 }

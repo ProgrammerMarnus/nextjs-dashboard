@@ -1,5 +1,5 @@
 import { lusitana } from '@/app/ui/fonts';
-import { fetchCardData } from '@/app/lib/data';
+import { fetchCardData } from '@/app/lib/supabase-data';
 import {
   BanknotesIcon,
   ClockIcon,

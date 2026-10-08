@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useActionState } from 'react';
 import { Button } from '@/app/ui/button';
 import { updatePatient, type PatientState } from '@/app/lib/actions';
-import type { Patient } from '@/app/lib/data';
+import type { Patient } from '@/app/lib/supabase-data';
 
 export default function EditForm({ patient }: { patient: Patient }) {
   const initialState: PatientState = { message: null, errors: {} };

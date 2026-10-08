@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { fetchAppointments } from '@/app/lib/data';
+import { fetchAppointments } from '@/app/lib/supabase-data';
 import { formatSA } from '@/app/lib/time';
 import { deleteAppointment } from '@/app/lib/actions';
 

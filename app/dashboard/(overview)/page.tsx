@@ -1,4 +1,4 @@
-import { fetchPatientsPerMonth, fetchAppointmentStatusThisMonth } from '@/app/lib/data';
+import { fetchPatientsPerMonth, fetchAppointmentStatusThisMonth } from '@/app/lib/supabase-data';
 import PatientsChart from '@/app/ui/dashboard/patients-chart';
 import StatusDonut from '@/app/ui/dashboard/status-donut';
 import { Metadata } from 'next';
