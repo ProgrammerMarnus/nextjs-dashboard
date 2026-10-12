@@ -68,128 +68,6 @@ export async function deleteAppointment(id: string) {
   revalidatePath('/dashboard/appointments');
 }
 
-const FormSchema = z.object({
-  id: z.string(),
-  customerId: z.string({
-    invalid_type_error: 'Please select a customer.',
-  }),
-  amount: z.coerce
-    .number()
-    .gt(0, { message: 'Please enter an amount greater than $0.' }),
-  status: z.enum(['pending', 'paid'], {
-    invalid_type_error: 'Please select an invoice status.',
-  }),
-  date: z.string(),
-});
-
-const CreateInvoice = FormSchema.omit({ id: true, date: true });
-const UpdateInvoice = FormSchema.omit({ id: true, date: true });
-
-export type State = {
-  errors?: {
-    customerId?: string[];
-    amount?: string[];
-    status?: string[];
-  };
-  message?: string | null;
-};
-
-export async function createInvoice(
-  prevState: State,
-  formData: FormData,
-): Promise<State> {
-  const validatedFields = CreateInvoice.safeParse({
-    customerId: formData.get('customerId'),
-    amount: formData.get('amount'),
-    status: formData.get('status'),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Missing Fields. Failed to Create Invoice.',
-    };
-  }
-
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
-  const date = new Date().toISOString().split('T')[0];
-
-  try {
-    const supabase = await createClient();
-    const { error } = await supabase.from('invoices').insert({
-      customer_id: customerId,
-      amount: amountInCents,
-      status,
-      date,
-    });
-    if (error) throw handleError(error, 'Failed to create invoice.');
-  } catch (error) {
-    const appError = handleError(error, 'Failed to create invoice.');
-    return { message: appError.message };
-  }
-
-  revalidatePath('/dashboard/invoices');
-  redirect('/dashboard/invoices');
-}
-
-export async function updateInvoice(
-  id: string,
-  prevState: State,
-  formData: FormData,
-): Promise<State> {
-  const validatedFields = UpdateInvoice.safeParse({
-    customerId: formData.get('customerId'),
-    amount: formData.get('amount'),
-    status: formData.get('status'),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Missing Fields. Failed to Update Invoice.',
-    };
-  }
-
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
-
-  try {
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from('invoices')
-      .update({
-        customer_id: customerId,
-        amount: amountInCents,
-        status,
-      })
-      .eq('id', id);
-    if (error) throw handleError(error, 'Failed to update invoice.');
-  } catch (error) {
-    const appError = handleError(error, 'Failed to update invoice.');
-    return { message: appError.message };
-  }
-
-  revalidatePath('/dashboard/invoices');
-  redirect('/dashboard/invoices');
-}
-
-export async function deleteInvoice(id: string) {
-  const validated = IdSchema.safeParse(id);
-  if (!validated.success) {
-    console.error('Validation Error:', validated.error.flatten().fieldErrors);
-    throw new AppError('Invalid invoice ID.', 'VALIDATION_ERROR', 400);
-  }
-  try {
-    const supabase = await createClient();
-    const { error } = await supabase.from('invoices').delete().eq('id', validated.data);
-    if (error) throw handleError(error, 'Failed to delete invoice.');
-  } catch (error) {
-    throw handleError(error, 'Failed to delete invoice.');
-  }
-  revalidatePath('/dashboard/invoices');
-}
-
 export type AuthState = {
   error: string | null;
 };
@@ -214,7 +92,6 @@ export async function signIn(
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
-    // Never leak which part of the credentials was wrong.
     return { error: 'Invalid credentials.' };
   }
 
