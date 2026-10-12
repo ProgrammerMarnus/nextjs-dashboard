@@ -60,3 +60,4 @@ test-results/
 /nextjs-dashboard/*.pem
 /nextjs-dashboard/.pnp
 /nextjs-dashboard/.pnp.js
+.vercel
