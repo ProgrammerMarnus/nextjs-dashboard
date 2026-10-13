@@ -62,16 +62,30 @@ describe('Server Actions', () => {
 
       await createAppointment(initialState, makeFormData({
         patient_id: '123e4567-e89b-12d3-a456-426614174000',
-        starts_at: '2024-01-15T10:00',
+        starts_at: '2030-01-15T10:00',
         status: 'booked',
       }));
 
       expect(client.from).toHaveBeenCalledWith('appointments');
       expect(insertFn).toHaveBeenCalledWith({
         patient_id: '123e4567-e89b-12d3-a456-426614174000',
-        starts_at: '2024-01-15T10:00:00+02:00',
+        starts_at: '2030-01-15T10:00:00+02:00',
         status: 'booked',
       });
+    });
+
+    it('should reject a booking in the past without touching the DB', async () => {
+      const { client, insertFn } = supabaseStub({ error: null });
+      setClient(client);
+
+      const result = await createAppointment(initialState, makeFormData({
+        patient_id: '123e4567-e89b-12d3-a456-426614174000',
+        starts_at: '2024-01-15T10:00',
+        status: 'booked',
+      }));
+
+      expect(insertFn).not.toHaveBeenCalled();
+      expect(result.errors?.starts_at).toContain('Appointments cannot be booked in the past.');
     });
 
     it('should throw AppError when insert fails', async () => {
@@ -80,7 +94,7 @@ describe('Server Actions', () => {
 
       await expect(createAppointment(initialState, makeFormData({
         patient_id: '123e4567-e89b-12d3-a456-426614174000',
-        starts_at: '2024-01-15T10:00',
+        starts_at: '2030-01-15T10:00',
         status: 'booked',
       }))).rejects.toBeInstanceOf(AppError);
     });
@@ -94,7 +108,7 @@ describe('Server Actions', () => {
 
       const result = await createAppointment(initialState, makeFormData({
         patient_id: '123e4567-e89b-12d3-a456-426614174000',
-        starts_at: '2024-01-15T10:00',
+        starts_at: '2030-01-15T10:00',
         status: 'booked',
       }));
 

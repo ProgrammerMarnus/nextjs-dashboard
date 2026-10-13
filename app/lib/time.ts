@@ -31,3 +31,10 @@ export function formatSA(iso: string): string {
 export function nowMs(): number {
   return Date.now();
 }
+
+// Current instant shifted into the fixed +02:00 clinic zone, as 'YYYY-MM-DDTHH:mm'.
+// Used to set the create form's `min` so past times can't be picked.
+export function nowDateTimeLocal(): string {
+  const shifted = new Date(Date.now() + 2 * 60 * 60 * 1000);
+  return shifted.toISOString().slice(0, 16);
+}

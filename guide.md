@@ -182,9 +182,16 @@ Internal (not exported, by design): `IdSchema` (UUID), `AppointmentSchema`
 - Patient actions **return** a `PatientState` (`{ errors, message }`) instead of throwing, because
   their forms use `useActionState` and render field-level errors inline.
 
-**Datetime handling:** `starts_at` comes from a `datetime-local` input (e.g. `2026-10-07T09:30`)
-and is converted to a Postgres `timestamptz` string by `fromDateTimeLocal()` (appends
-`:00+02:00`, the SAST offset) before insert. See `time.ts`.
+**Datetime handling:** `starts_at` is picked in a custom calendar component
+(`appointments/datetime-picker.tsx`, `'use client'`): a month grid plus 08:00–17:30
+30-minute time slots, fed taken slots by the create/edit pages. Booked days render
+amber; a booked start time (`isBookedSlot`) renders light red;
+the selected day/slot renders transparent green; past dates are greyed and disabled
+(`disallowPast`, create form only). The picker writes `'YYYY-MM-DDTHH:mm'` (e.g.
+`2026-10-07T09:30`) into a hidden `starts_at` input, converted to a Postgres
+`timestamptz` string by `fromDateTimeLocal()` (appends `:00+02:00`, the SAST offset)
+before insert. Past times are hard-rejected by `createAppointment` before touching
+the DB. See `time.ts`.
 
 **Revalidation:** after a successful mutation, each action calls `revalidatePath('/dashboard/...')`
 so the affected list re-fetches fresh data.
@@ -202,6 +209,7 @@ failure. Exports:
 | `fetchPatientOptions()` | `patients` (`id`, `full_name`) | `full_name` |
 | `fetchPatientById(id)` | single `patients` row (`maybeSingle`) | — |
 | `fetchAppointmentById(id)` | single `appointments` row (`single`) | — |
+| `fetchAppointmentSlotTimes(excludeId?)` | all appointment `starts_at` (ISO), minus one row for edit | — |
 
 Also **defines the shared row types** used across the app: `Patient`, `PatientsPerMonth`,
 `AppointmentRow`, `StatusRow`. (Note: `definitions.ts` holds a *parallel, older* copy of some of
@@ -220,6 +228,8 @@ these types — see section 12.)
 - `toDateTimeLocal(iso)` -> `'2026-10-07T09:30'` (Postgres -> edit-form `defaultValue`), shifting
   by +2h before slicing.
 - `formatSA(iso)` -> `en-ZA` string like `"07 Oct 2026, 09:30"` (display in the appointments table).
+- `nowDateTimeLocal()` — current instant as `'YYYY-MM-DDTHH:mm'` in the `+02:00` zone;
+  floor for the create-form picker (`disallowPast`).
 
 ### `utils.ts` — small formatters
 `formatCurrency` (cents -> USD), `formatDateToLocal`, `generatePagination` (page-number windowing).
@@ -277,13 +287,19 @@ Arrays `users`, `customers`, `invoices`, `revenue` from the tutorial. Consumed o
 ### Appointments
 - `appointments/buttons.tsx` — `CreateAppointment` (link), `UpdateAppointment` (link to edit),
   `DeleteAppointment` (form bound to `deleteAppointment`); mirrors the patient buttons.
-- `appointments/create-form.tsx` / `edit-form.tsx` (`'use client'`) — forms bound to
-  `createAppointment` / `updateAppointment.bind(null, id)` via `useActionState`; render Zod field
-  errors **and** the "slot already taken" message returned when the DB exclusion constraint
-  (`appointments_no_overlap`, PG code `23P01`) rejects an overlapping 30-minute slot.
-- The list page (`app/dashboard/appointments/page.tsx`) matches the patients page: Lusitana
-  heading, `CreateAppointment` pill, the same table wrapper classes, plus a colored status badge
-  per row.
+- `appointments/create-form.tsx` / `edit-form.tsx` (`'use client'`) — controlled forms
+  bound to `createAppointment` / `updateAppointment.bind(null, id)`
+  via `useActionState`, but submitting through an `onSubmit` + `preventDefault` handler that
+  calls the action dispatch manually (React 19's `<form action>` reset wipes even controlled
+  inputs — this preserves the patient name on a slot-conflict rejection). Both render Zod
+  field errors **and** the "slot already taken" message returned when the DB exclusion
+  constraint (`appointments_no_overlap`, PG code `23P01`) rejects an overlapping 30-minute
+  slot. Both mount the custom calendar (`appointments/datetime-picker.tsx`); create blocks
+  past dates, edit stays fully editable for historical correction.
+- The list pages (`app/dashboard/appointments/page.tsx`, `app/dashboard/patients/page.tsx`)
+  mount the existing `app/ui/search.tsx` (debounced, writes `?query=`) and filter
+  server-side by patient name (case-insensitive substring, `?query=` survives status-tab
+  switches on the appointments page).
 
 > **Client vs Server split:** charts, the login form, the patient forms, and now the appointment
 > forms are Client Components (`'use client'`, interactive via `useActionState`). They all use the
@@ -554,3 +570,19 @@ production URL **https://nextjs-org-learn.vercel.app**, demo login `user@nextmai
 - **Charts refactored**: `patients-chart.tsx`, `status-chart.tsx`, `chart-grid.tsx`,
   `chart-theme.ts` moved to `app/ui/charts/`; now read theme + accent from settings and render
   multiple variants.
+
+### Round 5 — Appointment calendar & list filters (13 Oct 2026)
+- **Custom calendar picker** (`app/ui/appointments/datetime-picker.tsx`): month grid with
+  08:00–17:30 30-minute time slots, fed taken slots by the create/edit pages
+  (`fetchAppointmentSlotTimes` + `toDateTimeLocal`). Booked days render amber; a booked
+  start time renders light red (`isBookedSlot`); the selected slot renders
+  transparent green; past dates are greyed/disabled (`disallowPast`, create only). Replaces the
+  native `datetime-local` input (which cannot be styled per-slot).
+- **Past-date guard:** `createAppointment` hard-rejects a past `starts_at` before touching the
+  DB; new unit test covers it plus a `2030` fixture roll-forward for the old `2024` dates.
+- **Name-preserving forms:** both appointment forms submit via `onSubmit` + `preventDefault`
+  calling the `useActionState` dispatch manually — React 19's `<form action>` reset wipes even
+  controlled inputs (`recursivelyResetForm`), which was clearing the patient name on a
+  slot-conflict rejection. Edit page excludes its own slot from the taken list.
+- **Patient-name filters:** both list pages mount the existing `app/ui/search.tsx`
+  (`?query=`, case-insensitive substring); status-tab links on appointments preserve it.

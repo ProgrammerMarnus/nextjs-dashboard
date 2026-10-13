@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { fetchAppointments } from '@/app/lib/supabase-data';
 import { formatSA } from '@/app/lib/time';
 import { lusitana } from '@/app/ui/fonts';
+import Search from '@/app/ui/search';
 import {
   CreateAppointment,
   UpdateAppointment,
@@ -34,23 +35,40 @@ const FILTERS: { key: string; label: string }[] = [
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; query?: string }>;
 }) {
-  const { status } = await searchParams;
+  const { status, query } = await searchParams;
   const active = status && FILTERS.some((f) => f.key === status) ? status : 'all';
+  const q = (query ?? '').trim().toLowerCase();
 
   const rows = await fetchAppointments();
 
-  const filtered = active === 'all' ? rows : rows.filter((a) => a.status === active);
+  // Apply status filter, then the patient-name search (case-insensitive substring).
+  const filtered = rows.filter((a) => {
+    const statusOk = active === 'all' || a.status === active;
+    const nameOk = q === '' || (a.patients?.full_name ?? '').toLowerCase().includes(q);
+    return statusOk && nameOk;
+  });
 
-  const filterHref = (key: string) =>
-    key === 'all' ? '/dashboard/appointments' : `/dashboard/appointments?status=${key}`;
+  // Keep the active name search when switching status tabs.
+  const filterHref = (key: string) => {
+    const params = new URLSearchParams();
+    if (key !== 'all') params.set('status', key);
+    if (q) params.set('query', q);
+    const qs = params.toString();
+    return qs ? `/dashboard/appointments?${qs}` : '/dashboard/appointments';
+  };
 
   return (
     <main className="w-full">
       <div className="flex w-full items-center justify-between">
         <h1 className={`${lusitana.className} text-2xl`}>Appointments</h1>
         <CreateAppointment />
+      </div>
+
+      {/* Patient-name search */}
+      <div className="mt-4">
+        <Search placeholder="Search appointments by patient name..." />
       </div>
 
       {/* Upcoming: next 3 booked appointments, resolvable once their slot starts. */}
@@ -78,7 +96,11 @@ export default async function Page({
       </nav>
 
       {filtered.length === 0 ? (
-        <p className="mt-6 text-sm text-gray-500">No appointments match this filter.</p>
+        <p className="mt-6 text-sm text-gray-500">
+          {q
+            ? `No appointments match “${query}”.`
+            : 'No appointments match this filter.'}
+        </p>
       ) : (
         <>
           {/* Mobile: stacked cards */}

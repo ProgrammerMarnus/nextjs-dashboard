@@ -105,3 +105,15 @@ export async function fetchAppointmentById(id: string) {
     .single();
   return data;
 }
+
+// All appointment start times (ISO). Used by the calendar picker to mark taken
+// slots as unavailable. `excludeId` omits one appointment (used when editing, so
+// the row's own current slot isn't shown as "taken").
+export async function fetchAppointmentSlotTimes(excludeId?: string): Promise<string[]> {
+  const supabase = await createClient();
+  let query = supabase.from('appointments').select('id, starts_at');
+  if (excludeId) query = query.neq('id', excludeId);
+  const { data, error } = await query;
+  if (error) throw new AppError(error.message, 'FETCH_ERROR', 500);
+  return (data ?? []).map((r) => r.starts_at as string);
+}

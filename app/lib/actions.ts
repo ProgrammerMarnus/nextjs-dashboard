@@ -48,10 +48,18 @@ export async function createAppointment(
       message: 'Missing or invalid fields. Failed to create appointment.',
     };
   }
+  const startsAtIso = fromDateTimeLocal(parsed.data.starts_at);
+  // Block booking in the past (the form's `min` is a hint; this is the guard).
+  if (new Date(startsAtIso).getTime() < Date.now()) {
+    return {
+      errors: { starts_at: ['Appointments cannot be booked in the past.'] },
+      message: 'That time has already passed. Please choose a future date and time.',
+    };
+  }
   const supabase = await createClient();
   const { error } = await supabase.from('appointments').insert({
     patient_id: parsed.data.patient_id,
-    starts_at: fromDateTimeLocal(parsed.data.starts_at),
+    starts_at: startsAtIso,
     status: parsed.data.status,
   });
   if (error) {

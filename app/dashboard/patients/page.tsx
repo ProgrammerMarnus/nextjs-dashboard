@@ -1,9 +1,19 @@
 import { fetchPatients } from '@/app/lib/supabase-data';
 import { CreatePatient, UpdatePatient, DeletePatient } from '@/app/ui/patients/buttons';
 import { lusitana } from '@/app/ui/fonts';
+import Search from '@/app/ui/search';
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ query?: string }>;
+}) {
+  const { query } = await searchParams;
+  const q = (query ?? '').trim().toLowerCase();
+
   const patients = await fetchPatients();
+  const filtered =
+    q === '' ? patients : patients.filter((p) => p.full_name.toLowerCase().includes(q));
 
   return (
     <div className="w-full">
@@ -12,13 +22,19 @@ export default async function Page() {
         <CreatePatient />
       </div>
 
-      {patients.length === 0 ? (
-        <p className="mt-6 text-sm text-gray-500">No patients yet. Add the first one.</p>
+      <div className="mt-4">
+        <Search placeholder="Search patients by name..." />
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="mt-6 text-sm text-gray-500">
+          {q ? `No patients match “${query}”.` : 'No patients yet. Add the first one.'}
+        </p>
       ) : (
         <>
           {/* Mobile: stacked cards */}
           <ul className="mt-6 space-y-3 md:hidden">
-            {patients.map((p) => (
+            {filtered.map((p) => (
               <li
                 key={p.id}
                 className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm"
@@ -53,7 +69,7 @@ export default async function Page() {
               </tr>
             </thead>
             <tbody className="bg-white">
-              {patients.map((p) => (
+              {filtered.map((p) => (
                 <tr key={p.id} className="border-b text-sm">
                   <td className="whitespace-nowrap px-4 py-3">{p.full_name}</td>
                   <td className="whitespace-nowrap px-3 py-3">{p.phone ?? ''}</td>
