@@ -1,0 +1,87 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "model": "anthropic/claude-sonnet-4",
+  "small_model": "anthropic/claude-haiku-3.5",
+  "default_agent": "code",
+  "permission": {
+    "bash": "allow",
+    "edit": "allow",
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "task": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "skill": "allow",
+    "todowrite": "allow",
+    "todoread": "allow",
+    "question": "allow",
+    "external_directory": "ask"
+  },
+  "mcp": {
+    "github": {
+      "type": "remote",
+      "url": "https://api.github.com/mcp",
+      "enabled": true
+    },
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\6413915\\VsCode\\nextjs-org-learn"],
+      "enabled": true
+    },
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "enabled": true
+    },
+    "fetch": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-fetch"],
+      "enabled": true
+    },
+    "sqlite": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sqlite", "C:\\Users\\6413915\\VsCode\\nextjs-org-learn\\.kilo\\memory.db"],
+      "enabled": true
+    },
+    "github-repo": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "enabled": true,
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+      }
+    }
+  },
+  "plugin": [
+    "npm:@kilo/plugin-github",
+    "npm:@kilo/plugin-linear",
+    "npm:@kilo/plugin-notion",
+    "npm:@kilo/plugin-slack"
+  ],
+  "skills": {
+    "paths": [
+      "./.kilo/skills",
+      "~/.config/kilo/skills"
+    ],
+    "urls": [
+      "https://raw.githubusercontent.com/kilo-org/skills/main/.well-known/skills/"
+    ]
+  },
+  "instructions": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CONTEXT.md"
+  ],
+  "snapshot": true,
+  "share": "manual",
+  "autoupdate": "notify",
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "reasoning_display": "preview",
+  "terminal_command_display": "collapsed",
+  "code_edit_display": "collapsed",
+  "mcp_tool_display": "collapsed"
+}

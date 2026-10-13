@@ -1,0 +1,18 @@
+import { notFound } from 'next/navigation';
+import { fetchAppointmentById, fetchPatientOptions } from '@/app/lib/supabase-data';
+import EditAppointmentForm from '@/app/ui/appointments/edit-form';
+
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [appointment, patients] = await Promise.all([
+    fetchAppointmentById(id),
+    fetchPatientOptions(),
+  ]);
+  if (!appointment) notFound();
+  return (
+    <main>
+      <h1 className="mb-6 text-2xl">Edit appointment</h1>
+      <EditAppointmentForm appointment={appointment} patients={patients} />
+    </main>
+  );
+}

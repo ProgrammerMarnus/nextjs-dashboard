@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 620" width="560" height="620" role="img" aria-label="Illustration of the Cura Health app showing a list of appointments on a phone">
+  <defs>
+    <linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eef4ff"/>
+      <stop offset="100%" stop-color="#d6e4ff"/>
+    </linearGradient>
+    <filter id="mphone" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#1e3a8a" flood-opacity="0.22"/>
+    </filter>
+    <filter id="msoft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#1e3a8a" flood-opacity="0.20"/>
+    </filter>
+  </defs>
+
+  <rect width="560" height="620" fill="url(#mbg)"/>
+  <circle cx="80" cy="90" r="70" fill="#bfdbfe" opacity="0.4"/>
+  <circle cx="500" cy="560" r="90" fill="#bfdbfe" opacity="0.4"/>
+
+  <!-- Phone -->
+  <g filter="url(#mphone)">
+    <rect x="155" y="30" width="250" height="560" rx="40" fill="#ffffff"/>
+  </g>
+  <!-- header -->
+  <path d="M155 70a40 40 0 0 1 40-40h170a40 40 0 0 1 40 40v62H155z" fill="#2563eb"/>
+  <text x="183" y="82" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="700" fill="#ffffff">Appointments</text>
+  <circle cx="362" cy="66" r="15" fill="#ffffff" opacity="0.9"/>
+  <path d="M362 59v14M355 66h14" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- appointment cards -->
+  <g font-family="Inter, system-ui, sans-serif">
+    <rect x="175" y="150" width="210" height="76" rx="14" fill="#f8fafc" stroke="#e6ecf5"/>
+    <circle cx="203" cy="188" r="18" fill="#dbeafe"/>
+    <text x="203" y="194" text-anchor="middle" font-size="13" font-weight="700" fill="#2563eb">JD</text>
+    <text x="232" y="182" font-size="13" font-weight="600" fill="#0f172a">Jane Doe</text>
+    <text x="232" y="204" font-size="11" fill="#64748b">Today · 09:30</text>
+    <rect x="296" y="166" width="78" height="22" rx="11" fill="#dbeafe"/>
+    <text x="335" y="181" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">Booked</text>
+
+    <rect x="175" y="244" width="210" height="76" rx="14" fill="#f8fafc" stroke="#e6ecf5"/>
+    <circle cx="203" cy="282" r="18" fill="#dcfce7"/>
+    <text x="203" y="288" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">JS</text>
+    <text x="232" y="276" font-size="13" font-weight="600" fill="#0f172a">John Smith</text>
+    <text x="232" y="298" font-size="11" fill="#64748b">Today · 11:00</text>
+    <rect x="300" y="260" width="70" height="22" rx="11" fill="#dcfce7"/>
+    <text x="335" y="275" text-anchor="middle" font-size="11" font-weight="600" fill="#15803d">Done</text>
+
+    <rect x="175" y="338" width="210" height="76" rx="14" fill="#f8fafc" stroke="#e6ecf5"/>
+    <circle cx="203" cy="376" r="18" fill="#dbeafe"/>
+    <text x="203" y="382" text-anchor="middle" font-size="13" font-weight="700" fill="#2563eb">AL</text>
+    <text x="232" y="370" font-size="13" font-weight="600" fill="#0f172a">Amy Lee</text>
+    <text x="232" y="392" font-size="11" fill="#64748b">Today · 13:15</text>
+    <rect x="296" y="354" width="78" height="22" rx="11" fill="#dbeafe"/>
+    <text x="335" y="369" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">Booked</text>
+
+    <rect x="175" y="432" width="210" height="76" rx="14" fill="#f8fafc" stroke="#e6ecf5"/>
+    <circle cx="203" cy="470" r="18" fill="#fef3c7"/>
+    <text x="203" y="476" text-anchor="middle" font-size="13" font-weight="700" fill="#b45309">MR</text>
+    <text x="232" y="464" font-size="13" font-weight="600" fill="#0f172a">Mark Ray</text>
+    <text x="232" y="486" font-size="11" fill="#64748b">Today · 15:00</text>
+    <rect x="292" y="448" width="82" height="22" rx="11" fill="#fef3c7"/>
+    <text x="333" y="463" text-anchor="middle" font-size="11" font-weight="600" fill="#b45309">No-show</text>
+  </g>
+
+  <!-- tab bar -->
+  <rect x="165" y="506" width="230" height="64" rx="20" fill="#f1f5f9"/>
+  <rect x="195" y="524" width="28" height="28" rx="8" fill="#2563eb"/>
+  <rect x="266" y="524" width="28" height="28" rx="8" fill="#cbd5e1"/>
+  <rect x="337" y="524" width="28" height="28" rx="8" fill="#cbd5e1"/>
+
+  <!-- Floating: heart chip (top-left, overlaps phone) -->
+  <g transform="translate(112,150) rotate(-8)" filter="url(#msoft)">
+    <rect width="56" height="56" rx="16" fill="#ffffff"/>
+    <path d="M28 42s-11-7-11-15a6.5 6.5 0 0 1 11-4 6.5 6.5 0 0 1 11 4c0 8-11 15-11 15z" fill="#ef4444"/>
+  </g>
+
+  <!-- Floating: done card (right) -->
+  <g transform="translate(420,420) rotate(6)" filter="url(#msoft)">
+    <rect width="96" height="60" rx="14" fill="#ffffff"/>
+    <circle cx="30" cy="30" r="14" fill="#dcfce7"/>
+    <path d="M24 30l5 5 9-10" stroke="#15803d" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="52" y="35" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600" fill="#0f172a">Done</text>
+  </g>
+</svg>
