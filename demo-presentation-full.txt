@@ -1,0 +1,277 @@
+================================================================================
+CURA HEALTH — DEMO PRESENTATION (FULL, 5 MINUTES)
+================================================================================
+A presenter run sheet, speaker script, and code map for the capstone demo.
+Narrate WHY you do each step, never the clicks.
+Timing target: land between 4:30 and 5:30.
+
+Production URL : https://nextjs-org-learn.vercel.app  (never localhost)
+Demo account   : user@nextmail.com  / 123456   (owner, 30+ patients, ~64 appts)
+Second account : user2@nextmail.com / 123456   (RLS proof, separate clinic)
+Backup         : recorded Loom/OBS run linked from the README
+
+
+--------------------------------------------------------------------------------
+PRE-FLIGHT (do before you walk in)
+--------------------------------------------------------------------------------
+1. Open the production URL and log in as user@nextmail.com AHEAD of time, so
+   you land straight on the Dashboard with no login fumbling on stage.
+2. Open a second private window already logged in as user2@nextmail.com
+   (instant switch for the 3:30 RLS proof).
+3. Script your test patient name in advance: "Thabo Mokoena".
+4. Know a free slot in the picker. Red slots in the time grid are taken;
+   an amber day just means "has appointments", not "full".
+5. Have VS Code open with two files ready:
+     - app/lib/actions.ts
+     - supabase/appointments-no-overlap.sql
+   These are the two files you flash if the panel asks to see code.
+
+
+================================================================================
+0:00-0:30  |  HOOK  |  "What is this and who is it for?"
+================================================================================
+DO:  Land on the Dashboard. Let the sidebar, the two charts, and Upcoming
+     Appointments sit for one beat. Click nothing.
+
+SAY: "Cura Health is a practice dashboard for small clinics. It lets staff run
+     every appointment in one place and see at a glance how the practice is
+     doing."
+
+
+================================================================================
+0:30-1:00  |  PROBLEM  |  "Why does it need to exist?"
+================================================================================
+SAY: "Without it, clinics juggle paper or spreadsheets. They double-book the
+     same slot, and they never see who actually showed up. No-shows quietly
+     cost them money. So I made one screen that fixes both."
+
+- Name the two pains out loud: DOUBLE-BOOKING and INVISIBLE NO-SHOWS.
+- Bridge: "Watch both get fixed in the next two minutes."
+
+
+================================================================================
+1:00-3:30  |  LIVE WALK  |  "Does it actually work?"
+================================================================================
+One happy path: sign in -> create -> edit -> chart -> sign out.
+You are already signed in (pre-flight), so start at Create and narrate what a
+sign-in would have done.
+
+1. CREATE PATIENT
+   Sidebar -> Patients -> New patient. Enter Thabo Mokoena, phone, DOB. Submit.
+   SAY: "First the patient exists. That was a server action, validated with Zod
+        before it touches the database."
+
+2. CREATE APPOINTMENT
+   New appointment -> pick Thabo -> open the calendar picker.
+   DO:  Pick a day, click a RED slot to show it is disabled, then pick a
+        free slot. Submit.
+   SAY: "The taken slot is blocked here in the UI. But the real guard is in the
+        database, which I will show you in a moment."
+
+3. EDIT
+   Appointments table -> pencil icon -> change the time and/or status -> save.
+   SAY: "Editing re-runs the same validation and the same overlap guard."
+
+4. CHART
+   Back on the Dashboard.
+   SAY: "This is New Patients per Month. Thabo just became the newest bar. And
+        this donut is Appointment Status: Done, No-show, Booked. This is how a
+        clinic would spot a no-show trend before it eats their revenue."
+
+5. RESOLVE AN UPCOMING APPOINTMENT
+   On the same Dashboard, take one upcoming card and click Done or No-show.
+   SAY: "One tap after the slot starts, the status chart updates. The no-show
+        number is now a real measurement, not a feeling."
+
+6. SIGN OUT
+   Sidebar power icon -> confirm you are back on the landing page.
+
+SAY (framing): "I am proving a new patient and appointment are captured, the
+     slot cannot be double-booked, and the chart reflects it. Not clicking
+     buttons."
+
+
+================================================================================
+3:30-4:15  |  ONE DECISION  |  "How did you build it?"
+================================================================================
+SAY: "The decision I would highlight is Row Level Security at the database
+     layer. auth.uid() equals user_id. I chose it because isolation is enforced
+     where the data lives, so even if my app code had a bug, one clinic can
+     never see another's rows."
+
+- Stack in one breath: Next.js App Router + Supabase (Postgres) + Recharts.
+DO: Switch to the second private window (user2@nextmail.com). Patients and
+    Appointments contain none of Thabo's rows. Switch back.
+
+SAY: "Same app, same tables, zero shared data. The database refuses the query.
+     It is not a filter I wrote in the UI."
+
+
+================================================================================
+4:15-5:00  |  LIMITS + NEXT  |  "What is honest and what is next?"
+================================================================================
+TWO HONEST LIMITATIONS
+  1. Times are fixed to ONE clinic timezone; there is no per-user timezone yet.
+  2. Status is tracked MANUALLY. No automated reminders, so no-shows are
+     measured, not prevented.
+
+THREE CONCRETE NEXT STEPS
+  1. 24-hour reminders, then measure whether the no-show rate drops. The donut
+     makes that measurable.
+  2. Custom date-range charts + CSV export for reporting.
+  3. Roles and per-provider scheduling so multi-doctor clinics each get their
+     own calendar.
+
+CLOSE (return to the hook):
+SAY: "So a small clinic gets a single screen that stops double-booking and
+     makes growth and no-shows visible."
+
+
+================================================================================
+CODE MAP — WHERE THE IMPORTANT FUNCTIONS LIVE
+================================================================================
+Use this when the panel asks "show me where that is implemented".
+
+THE FIVE THINGS THAT MAKE THIS PROJECT GOOD
+-------------------------------------------
+1. Double-booking blocked in the DB
+   File : supabase/appointments-no-overlap.sql:27
+   What : EXCLUDE USING gist (user_id with =, 30-min tstzrange with &&)
+   Why  : The app is not trusted to enforce this. Postgres is. A buggy client
+          cannot insert a clash. UTC-anchored range explained at lines 22-25.
+
+2. Row Level Security: auth.uid() = user_id on every table
+   Files: supabase/patients.sql:21, supabase/appointments.sql:28
+   What : Four policies per table (select/insert/update/delete).
+   Why  : The insert policy even re-checks the patient FK through patients' own
+          RLS (appointments.sql:36) — a trap most tutorials miss.
+
+3. Charts are Postgres views with security_invoker
+   Files: supabase/patients_per_month.sql:5, supabase/appointment-status-view.sql:4
+   What : Aggregation happens in SQL (generate_series keeps months gapless).
+   Why  : Views respect the caller's RLS. No client-side leak, no ORM.
+
+4. Server Actions: one validated mutation path
+   File : app/lib/actions.ts
+   What : createAppointment (line 40), createPatient (line 224),
+          setAppointmentStatus (line 127).
+   Why  : Zod parse -> DB write -> revalidatePath -> redirect. Typed
+          end-to-end, works without JavaScript.
+
+5. Slot picker with live disabled slots
+   File : app/ui/appointments/datetime-picker.tsx
+   What : buildTimeSlots (line 27, clinic hours 08:00-17:30 in 30-min slots),
+          isBookedSlot (line 76).
+   Why  : Taken slots come from the live DB via
+          fetchAppointmentSlotTimes (app/lib/supabase-data.ts:112).
+
+
+DEMO MOMENT -> CODE REFERENCE
+-------------------------------------------
+Sign in (form)      app/ui/login-form.tsx:19      useActionState(signIn, ...)
+                    -> app/lib/actions.ts:150     signIn(): Zod ->
+                                                   signInWithPassword -> redirect
+Sign out            app/lib/actions.ts:177        signOut()
+                    -> app/ui/dashboard/sidenav.tsx:21
+
+Create patient      app/lib/actions.ts:224        createPatient() with Zod
+                                                   schema at line 209, then
+                                                   revalidatePath line 253
+
+Create appointment  app/lib/actions.ts:40         createAppointment():
+                    line 53  past-time guard
+                    line 67  PG error 23P01 -> friendly message
+                    line 29  SLOT_CONFLICT_MESSAGE text
+
+Overlap guard (DB)  supabase/appointments-no-overlap.sql:27
+                    appointments_no_overlap exclusion constraint
+
+Calendar picker     app/ui/appointments/datetime-picker.tsx:27, 76, 96-106
+                    buildTimeSlots, isBookedSlot, next-free-slot logic
+
+Taken slots feed    app/lib/supabase-data.ts:112  fetchAppointmentSlotTimes
+                                                   (excludeId handles editing)
+                    -> app/dashboard/appointments/create/page.tsx:6
+                       parallel fetch of patients + slots
+
+Edit appointment    app/lib/actions.ts:77         updateAppointment(), same
+                                                   23P01 mapping at 103-105
+
+Dashboard loads     app/dashboard/(overview)/page.tsx:13
+                    Promise.all — three queries in parallel
+
+New Patients chart  supabase/patients_per_month.sql:5
+                    -> app/lib/supabase-data.ts:45 fetchPatientsPerMonth
+                    -> app/ui/charts/patients-chart.tsx:22 computeData
+                       bar = monthly, area = cumulative, line = MoM growth %
+                    -> app/ui/charts/chart-grid.tsx:53 user swappable slots
+
+Status donut        supabase/appointment-status-view.sql:4
+                    -> app/lib/supabase-data.ts:70 fetchAppointmentStatusThisMonth
+                    -> app/ui/charts/status-chart.tsx:15 LegendContent
+                       (percentages in the legend)
+
+Resolve Done/No-show
+                    app/lib/actions.ts:127        setAppointmentStatus()
+                    app/ui/appointments/buttons.tsx:58  ResolveAppointment
+                    app/ui/dashboard/upcoming-list.tsx:64 "has it started?"
+                    app/ui/dashboard/upcoming-list.tsx:38-50 next-N or
+                       today/week/month windows + live clock (17-20)
+
+RLS proof           tests/rls-isolation.spec.ts:4 Playwright test: both demo
+                    users; asserts user two never sees user one's rows
+
+
+Q&A — QUESTION -> WHERE THE ANSWER LIVES
+-------------------------------------------
+"What stops two bookings at the same time, really?"
+  -> The exclusion constraint, not the UI: supabase/appointments-no-overlap.sql:27.
+     Red slots are just kindness.
+
+"How is data isolated between clinics?"
+  -> RLS at the DB: supabase/appointments.sql:28, supabase/patients.sql:21.
+     Automated proof: tests/rls-isolation.spec.ts:4.
+
+"Where does the double-booking error message come from?"
+  -> app/lib/actions.ts:67 — Postgres SQLSTATE 23P01 mapped to a human
+     sentence (SLOT_CONFLICT_MESSAGE, line 29).
+
+"Is the DB secret exposed to the browser?"
+  -> No. All reads/writes go through Server Components/Actions; the Supabase
+     server client lives in utils/supabase/server (cookie session). Charts
+     fetch server-side and pass plain props.
+
+"How does the chart update without a page refresh?"
+  -> revalidatePath('/dashboard') after every mutation: app/lib/actions.ts:72,
+     108, 142, 254.
+
+"Why not an ORM or raw SQL in an API route?"
+  -> Views aggregate in-database with security_invoker and RLS still applies:
+     supabase/patients_per_month.sql:5. Fewer round-trips, no duplicated auth.
+
+"What breaks if Supabase is down?"
+  -> Errors funnel through AppError/handleError (app/lib/errors.ts) and render
+     via app/dashboard/error.tsx. Surfaced, not swallowed.
+
+
+HONEST LIMITATIONS (have these ready, unprompted)
+-------------------------------------------
+1. Single clinic timezone — app/lib/time.ts:2 hardcodes +02:00 /
+   Africa/Johannesburg; fromDateTimeLocal and formatSA assume it everywhere.
+2. Manual status tracking — Done/No-show set by staff
+   (setAppointmentStatus, app/lib/actions.ts:127). Nothing reminds the
+   patient. Charts are fixed windows (last 6 months / this month).
+
+
+BACKUP PLAN
+-------------------------------------------
+- If the live demo fails: play the recorded run (link in README) and narrate
+  over it.
+- If only the network drops: everything is reproducible locally via
+  "pnpm dev" plus "node --env-file=.env scripts/reset-reseed.mjs".
+- Worst case: walk the panel through the CODE MAP table above. The
+  constraints, policies, and views are the strong part of the story anyway.
+
+================================================================================
+END OF FULL SCRIPT
+================================================================================

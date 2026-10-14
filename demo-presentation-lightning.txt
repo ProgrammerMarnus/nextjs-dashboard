@@ -1,0 +1,136 @@
+================================================================================
+CURA HEALTH — DEMO PRESENTATION (LIGHTNING, 2 MINUTES)
+================================================================================
+Condensed run sheet for when you get half the time. One breath per line.
+Narrate WHY, never the clicks. Target: land at 1:45-2:15.
+
+Production URL : https://nextjs-org-learn.vercel.app
+Logins         : user@nextmail.com / 123456  (owner)
+                 user2@nextmail.com / 123456 (RLS proof, second window)
+
+
+PRE-FLIGHT (2 minutes before you start)
+-------------------------------------------
+- Log in as user@nextmail.com on the production URL FIRST, so you land
+  straight on the Dashboard.
+- Second private window already logged in as user2@nextmail.com.
+- Script patient name ready: "Thabo Mokoena". Know one free slot in the picker.
+
+
+================================================================================
+0:00-0:20  |  HOOK + PROBLEM
+================================================================================
+DO:  Land on the Dashboard. One beat of silence. Click nothing.
+
+SAY: "Cura Health is a practice dashboard for small clinics. Every appointment
+     in one place, and the practice's health at a glance.
+
+     The problem: clinics run on paper and spreadsheets. They double-book the
+     same slot, and they never see who actually showed up. No-shows quietly
+     cost them money. One screen fixes both."
+
+
+================================================================================
+0:20-1:20  |  LIVE WALK
+================================================================================
+1. CREATE PATIENT — Patients -> New patient -> "Thabo Mokoena" -> Submit.
+   SAY: "A server action, validated with Zod before it touches the database."
+
+2. CREATE APPOINTMENT — New appointment -> pick Thabo -> click a RED slot to
+   show it is disabled -> pick a free slot -> Submit.
+   SAY: "Blocked here in the UI. The real guard is in the database."
+
+3. EDIT — Appointments -> pencil -> change time or status -> save.
+   SAY: "Same validation, same overlap guard."
+
+4. CHART — Dashboard.
+   SAY: "New Patients per Month. Thabo is the newest bar. The donut is
+        Appointment Status. Done, No-show, Booked. That is how they spot the
+        no-show trend."
+
+5. RESOLVE — one Upcoming card -> Done.
+   SAY: "One tap, the chart updates. No-shows become a measurement."
+
+
+================================================================================
+1:20-1:45  |  ONE DECISION
+================================================================================
+SAY: "The decision I would highlight is Row Level Security at the database
+     layer. auth.uid() equals user_id. Isolation is enforced where the data
+     lives, so even if my app code had a bug, one clinic can never see
+     another's rows.
+
+     Stack: Next.js App Router, Supabase Postgres, Recharts."
+
+DO:  Switch to private window 2 (user2@nextmail.com). Patients and
+     Appointments show none of Thabo's rows.
+SAY: "Same app, same tables, zero shared data. The database refuses the query."
+
+
+================================================================================
+1:45-2:00  |  LIMITS + CLOSE
+================================================================================
+SAY: "Two honest limits: times are fixed to one clinic timezone, and status is
+     tracked manually, so no-shows are measured, not prevented. Next:
+     automated 24-hour reminders, then measure whether the no-show rate drops;
+     custom date-range charts with CSV export; roles for multi-doctor clinics.
+
+     So: one screen that stops double-booking and makes growth and no-shows
+     visible."
+
+
+================================================================================
+CODE MAP (if the panel asks "show me where")
+================================================================================
+The two files to have open:
+  - app/lib/actions.ts
+  - supabase/appointments-no-overlap.sql
+
+THE FIVE KEY FUNCTIONS / RULES
+-------------------------------------------
+1. Double-booking blocked in the DB
+   supabase/appointments-no-overlap.sql:27
+   EXCLUDE USING gist (user_id with =, 30-min tstzrange with &&).
+   The database, not the app, enforces the rule.
+
+2. Row Level Security on every table
+   supabase/patients.sql:21 and supabase/appointments.sql:28
+   Four policies per table: auth.uid() = user_id. The insert policy re-checks
+   the patient FK through RLS too (appointments.sql:36).
+   Automated proof: tests/rls-isolation.spec.ts:4
+
+3. Charts are Postgres views with security_invoker
+   supabase/patients_per_month.sql:5 and supabase/appointment-status-view.sql:4
+   Aggregation in SQL, respects the caller's RLS.
+
+4. Server Actions, one validated mutation path
+   app/lib/actions.ts: createAppointment (40), createPatient (224),
+   setAppointmentStatus (127), updateAppointment (77).
+   Zod -> DB -> revalidatePath -> redirect. Works without JS.
+   Double-booking error: PG 23P01 mapped to a friendly message at line 67.
+
+5. Live slot picker
+   app/ui/appointments/datetime-picker.tsx:27 and 76
+   buildTimeSlots (clinic hours 08:00-17:30), isBookedSlot.
+   Taken slots from the live DB: app/lib/supabase-data.ts:112
+   fetchAppointmentSlotTimes.
+
+QUICK REFERENCE
+-------------------------------------------
+Sign in / sign out .... app/lib/actions.ts:150 / :177 (form :login-form.tsx:19)
+Dashboard loads fast .. app/dashboard/(overview)/page.tsx:13 (Promise.all)
+Chart variants ........ app/ui/charts/patients-chart.tsx:22 (computeData)
+                       bar = monthly, area = cumulative, line = MoM growth %
+Status donut .......... app/ui/charts/status-chart.tsx:15 (LegendContent %)
+Upcoming list ......... app/ui/dashboard/upcoming-list.tsx:38-50, 64-77
+Timezone limitation .... app/lib/time.ts:2 (fixed +02:00)
+
+BACKUP
+-------------------------------------------
+- Live demo fails: play the recorded run linked from the README.
+- Otherwise walk the panel through the code map: the constraint, the RLS
+  policies, and the views are the strong part of the story anyway.
+
+================================================================================
+END OF LIGHTNING SCRIPT
+================================================================================
